@@ -29,11 +29,6 @@ pub fn main() {
         for j in 0..instructions[i].hex.len() {
             print!("{:02X}", instructions[i].hex[j]);
         }
-        print!(":\t");
-        print!("{:?}", instructions[i].opcode);
-        if instructions[i].operand != "" {
-            print!(" {}", instructions[i].operand);
-        }
-        println!("");
+        println!(":\t{}", instructions[i].dasm.replace("{}", &instructions[i].operand));
     }
 }

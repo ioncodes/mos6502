@@ -9,8 +9,9 @@ pub fn parse(hex: Vec<u8>) -> Vec<Instruction> {
     let mut pc = 0x0; // emulates program counter
     loop {
         let byte = hex[pc];
-        let (opcode, size) = table::resolve(byte);
+        let (opcode, size, dasm) = table::resolve(byte);
         let mut bytes = Vec::<u8>::new();
+        println!("{:X}", byte);
         bytes.push(byte);
         for i in 1..size {
             bytes.push(hex[pc + i]);
@@ -30,8 +31,11 @@ pub fn parse(hex: Vec<u8>) -> Vec<Instruction> {
             opcode,
             operand,
             hex: bytes,
+            dasm
         });
         pc += size;
+
+        println!("{:X}", pc);
 
         if pc == hex.len() {
             break;
@@ -73,12 +77,7 @@ mod tests {
             for j in 0..instructions[i].hex.len() {
                 print!("{:02X}", instructions[i].hex[j]);
             }
-            print!(":\t");
-            print!("{:?}", instructions[i].opcode);
-            if instructions[i].operand != "" {
-                print!(" {}", instructions[i].operand);
-            }
-            println!("");
+            println!(":\t{}", instructions[i].dasm.replace("{}", &instructions[i].operand));
         }
         assert_eq!(9, instructions.len());
         assert_eq!(Opcode::SEI, instructions[0].opcode);
