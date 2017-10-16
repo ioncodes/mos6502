@@ -1,8 +1,12 @@
+extern crate byteorder;
+
 mod opcode;
 mod instruction;
 mod table;
 
 use instruction::Instruction;
+use std::io::Cursor;
+use byteorder::{LittleEndian, ReadBytesExt};
 
 pub fn parse(hex: Vec<u8>) -> Vec<Instruction> {
     let mut instructions = Vec::<Instruction>::new();
@@ -11,10 +15,17 @@ pub fn parse(hex: Vec<u8>) -> Vec<Instruction> {
         let byte = hex[pc];
         let (opcode, size, dasm) = table::resolve(byte);
         let mut bytes = Vec::<u8>::new();
-        println!("{:X}", byte);
         bytes.push(byte);
         for i in 1..size {
             bytes.push(hex[pc + i]);
+        }
+        if bytes.len() > 2 {
+            let byte1 = bytes[1];
+            let byte2 = bytes[2];
+            let mut rdr = Cursor::new(vec![byte1, byte2]);
+            let byte = rdr.read_u16::<LittleEndian>().unwrap();
+            bytes[1] = ((byte & 0xFF00) >> 8) as u8;
+            bytes[2] = (byte & 0x00FF) as u8;
         }
         let mut operand = String::new();
         if bytes.len() > 1 {
@@ -34,8 +45,6 @@ pub fn parse(hex: Vec<u8>) -> Vec<Instruction> {
             dasm
         });
         pc += size;
-
-        println!("{:X}", pc);
 
         if pc == hex.len() {
             break;
